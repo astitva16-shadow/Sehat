@@ -18,19 +18,22 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB connection handler
-let isConnected = false;
+let cachedDb = null;
 
 const connectDB = async () => {
-  if (isConnected) {
-    return;
+  if (cachedDb && mongoose.connection.readyState === 1) {
+    return cachedDb;
   }
   
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+    mongoose.set('bufferCommands', false);
+    const db = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
     });
-    isConnected = true;
+    cachedDb = db;
     console.log('✅ MongoDB Connected');
+    return db;
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
     throw err;
