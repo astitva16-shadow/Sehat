@@ -63,6 +63,11 @@ app.use((err, req, res, next) => {
 
 // Serverless handler
 export default async (req, res) => {
-  await connectDB();
-  return app(req, res);
+  try {
+    await connectDB();
+    app(req, res);
+  } catch (error) {
+    console.error('Handler error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+  }
 };
